@@ -13,7 +13,7 @@ const urlDatabase = {
 
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 app.get("/urls", (req, res) => {
     const templateVars = { urls: urlDatabase};
@@ -24,7 +24,6 @@ app.post("/urls", (req, res) => {
     let shortURL = generateRandomString();
     let longURL = req.body.longURL;
     urlDatabase[shortURL] = longURL;
-    //console.log(`hello${longURL}`);
     res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 app.get("/urls/new", (req, res) => {
@@ -36,13 +35,15 @@ app.get("/urls.json", (req, res) => {
 });
 app.get("/urls/:shortURL", (req, res) => {
     const templateVars = { shortURL : req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-    console.log(req.params.shortURL);
     res.render("urls_show", templateVars);
 });
 app.get("/u/:shortURL", (req, res) => {
     const longURL = urlDatabase[req.params.shortURL];
-    //console.log(longURL);
     res.redirect(longURL);   
+});
+app.post("/urls/:shortURL/delete", (req, res) => {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
 });
   
 function generateRandomString() {

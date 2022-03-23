@@ -45,6 +45,21 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
 });
+app.post("/urls/:shortURL", (req, res) => {
+    let shortURL = req.params.shortURL;
+    let longURL = req.body.longURL;
+    urlDatabase[shortURL] = longURL;
+    /*
+    for (let url in urlDatabase) {     
+        if (url === req.params.shortURL) {       
+            let shortURL = req.params.shortURL;       
+            let longURL = req.body.longURL;       
+            urlDatabase[shortURL]["longURL"] = longURL;     
+        }    
+    }
+*/
+    res.redirect('/urls');
+});
   
 function generateRandomString() {
     const minVal = 35 ** 5;

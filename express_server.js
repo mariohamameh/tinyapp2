@@ -6,10 +6,19 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+const bcrypt = require("bcryptjs");
+const password = "purple-monkey-dinosaur"; // found in the req.params object
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 const users = {
   userRandomID: {
@@ -30,15 +39,15 @@ const findUserByEmail = function (email, database) {
     }
   }
 };
-const urlsForUser = function(userID) {
-    const output = {};
-    for (let shortURL in urlDatabase) {
-        if (urlDatabase[shortURL].userID === userID) {
-            output[shortURL] = urlDatabase[shortURL].longURL;       
-        }
+const urlsForUser = function (userID) {
+  const output = {};
+  for (let shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === userID) {
+      output[shortURL] = urlDatabase[shortURL].longURL;
     }
-    return output;
-} 
+  }
+  return output;
+};
 
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -52,15 +61,15 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if (!password || !email) {
-    return res.send("404 wrong email and/or password!");
+  if (!email) {
+    return res.send("404");
   }
   const user = findUserByEmail(email, users);
   if (!user) {
     return res.send("404 email not found!");
   }
-  if (password !== user.password) {
-    return res.send("404 wrong password!");
+  if (!bcrypt.compareSync(password, findUserByEmail(email, users).password)) {
+    res.send("passwords dont match 403");
   }
   res.cookie("user_id", user.id);
   return res.redirect("/urls");
@@ -83,12 +92,14 @@ app.post("/register", (req, res) => {
   if (!password || !email) {
     res.send("404");
   } else if (findUserByEmail(email, users)) {
-    res.send("404");
+    res.send("404 email already exists!");
   } else {
+    const user_id = generateRandomString();
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const user = {
       email: email,
       id: user_id,
-      password: password,
+      password: hashedPassword,
     };
     users[user_id] = user;
     res.cookie("user_id", user_id);
@@ -107,7 +118,7 @@ app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies["user_id"]};
   return res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
 });
 
@@ -129,7 +140,7 @@ app.get("/urls/:shortURL", (req, res) => {
     if (id === user_id) {
       const templateVars = {
         shortURL: req.params.shortURL,
-        longURL: urlDatabase[req.params.shortURL],
+        longURL: urlDatabase[req.params.shortURL].longURL,
         user: users[id],
         urls: urlDatabase,
       };
@@ -138,7 +149,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   return res.redirect(longURL);
 });
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -148,7 +159,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL].longURL = longURL;
   return res.redirect("/urls");
 });
 

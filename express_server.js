@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
+  "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 const users = {
@@ -30,6 +30,15 @@ const findUserByEmail = function (email, database) {
     }
   }
 };
+const urlsForUser = function(userID) {
+    const output = {};
+    for (let shortURL in urlDatabase) {
+        if (urlDatabase[shortURL].userID === userID) {
+            output[shortURL] = urlDatabase[shortURL].longURL;       
+        }
+    }
+    return output;
+} 
 
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -44,14 +53,14 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!password || !email) {
-    return res.send("404");
+    return res.send("404 wrong email and/or password!");
   }
   const user = findUserByEmail(email, users);
   if (!user) {
-    return res.send("404");
+    return res.send("404 email not found!");
   }
   if (password !== user.password) {
-    return res.send("404");
+    return res.send("404 wrong password!");
   }
   res.cookie("user_id", user.id);
   return res.redirect("/urls");
@@ -89,14 +98,10 @@ app.post("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   const user_id = req.cookies["user_id"];
   if (!user_id) {
-    return res.render("urls_index", { user: false, urls: urlDatabase });
+    return res.redirect("/login");
   }
-  for (let id in users) {
-    if (id === user_id) {
-      const templateVars = { user: users[id], urls: urlDatabase };
-      return res.render("urls_index", templateVars);
-    }
-  }
+  const templateVars = { user: users[user_id], urls: urlDatabase };
+  return res.render("urls_index", templateVars);
 });
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
@@ -108,13 +113,11 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user_id = req.cookies["user_id"];
-  for (let id in users) {
-    if (id === user_id) {
-      const templateVars = { user: users[id], urls: urlDatabase };
-      return res.render("urls_new", templateVars);
-    }
+  if (!user_id) {
+    return res.send("404 cant access this feature without being logged in!");
   }
-  return res.render("urls_index", { user: false, urls: urlDatabase });
+  const templateVars = { user: users[user_id], urls: urlDatabase };
+  return res.render("urls_new", templateVars);
 });
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);

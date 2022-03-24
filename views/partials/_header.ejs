@@ -11,25 +11,17 @@
           <% if (user) { %> 
             <form method="POST" action="/logout" class="form-inline">
               <div class="form-group form-inline">
-                <label>Logged In As: <%= user %></label>
+                <label>Logged In As: <%= user.email %></label>
                 <button type="submit" class="btn btn-outline-dark" style="margin: 1em">Logout</button>
               </div>
             </form>
           <% } else { %>
-            <form method="POST" action="/login" class="form-inline">
               <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
-                  <button type="submit" class="btn btn-outline-dark" style="margin: 1em">Login</button>
+                  <a class="nav-item nav-link" href="/login" style="margin: 1em">Login</a>
+                  <a class="nav-item nav-link" href="/register" style="margin: 1em">Register</a>
                 </div>
               </div>
-            </form>
-            <form method="GET" action="/register" class="form-inline">
-              <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
-                <div class="navbar-nav">
-                  <button type="submit" class="btn btn-outline-dark" style="margin: 1em">Register</button>
-                </div>
-              </div>
-            </form>
             <% } %>
         </div>
       </div>

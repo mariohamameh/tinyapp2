@@ -98,7 +98,7 @@ app.get("/urls/:shortURL", (req, res) => {
     }
     return res.render("urls_show", templateVars);
   } else {
-    res.redirect("/login");
+    res.send("401 should be logged in for this feature");
   }
 });
 
